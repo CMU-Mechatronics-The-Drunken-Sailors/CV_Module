@@ -1,1 +1,1 @@
-from .nn_eval import apply_nn
+from .nn_eval import apply_nn, NN_Labels

@@ -462,6 +462,7 @@ scipy==1.8.0 \
     --hash=sha256:f3720d0124aced49f6f2198a6900304411dbbeed12f56951d7c66ebef05e3df6 \
     --hash=sha256:f4a6d3b9f9797eb2d43938ac2c5d96d02aed17ef170c8b38f11798717523ddba
     # via
+    #   -r requirements.in
     #   seaborn
     #   yolov5
 seaborn==0.11.2 \
