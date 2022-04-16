@@ -4,7 +4,7 @@ runs/
 .vscode/
 *.cache
 *.pt
-!good_weights/*.pt
+!**/model.pt
 
 # Exclude images from git, but keep the video files
 data/**/*.jpg
