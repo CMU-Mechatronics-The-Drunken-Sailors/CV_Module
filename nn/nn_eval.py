@@ -1,10 +1,10 @@
 from enum import Enum
 import cv2
 import os
-import yolov5
+import torch
 
 WEIGHTS = os.path.join(os.path.dirname(__file__), "model.pt")
-model = yolov5.load(WEIGHTS)
+model = torch.hub.load('ultralytics/yolov5', 'custom', path=WEIGHTS)
 
 
 class NN_Labels(Enum):
