@@ -2,12 +2,15 @@ import argparse
 import cv2
 import numpy as np
 import pickle
+import pyrealsense2 as rs
 
 from video_capture_threading import VideoCaptureThreading as VideoCapture
 
-KEYS = ["blue", "blue_liberal", "stopcock_blue"] # Modify as needed
+# KEYS = ["blue", "blue_liberal", "stopcock_blue"]
+# FILE = "valve/valve_hsv.pkl"
 
-FILE = "valve/valve_hsv.pkl"
+KEYS = ["breaker_switch"]
+FILE = "breaker/breaker_hsv.pkl"
 
 max_value = 255
 max_value_H = 360 // 2
@@ -76,40 +79,79 @@ def on_high_V_thresh_trackbar(val):
 
 if __name__ == "__main__":
     # Command line argument parsing
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--cam_port", "-p", type=str, default=0, help="OpenCV camera port or video file"
-    )
-    parser.add_argument(
-        "--cap_width", "-x", type=int, default=3840, help="Camera capture width"
-    )
-    parser.add_argument(
-        "--cap_height", "-y", type=int, default=2160, help="Camera capture height"
-    )
-    parser.add_argument(
-        "--cap_fps", "-f", type=int, default=30, help="Camera capture FPS"
-    )
-    parser.add_argument(
-        "--cam_calib",
-        "-c",
-        type=str,
-        default="camera_calibration_data.pkl",
-        help="Camera calibration",
-    )
-    parser.add_argument("--use_calib", "-u", action="store_true")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument(
+    #     "--cam_port", "-p", type=str, default=0, help="OpenCV camera port or video file"
+    # )
+    # parser.add_argument(
+    #     "--cap_width", "-x", type=int, default=3840, help="Camera capture width"
+    # )
+    # parser.add_argument(
+    #     "--cap_height", "-y", type=int, default=2160, help="Camera capture height"
+    # )
+    # parser.add_argument(
+    #     "--cap_fps", "-f", type=int, default=30, help="Camera capture FPS"
+    # )
+    # parser.add_argument(
+    #     "--cam_calib",
+    #     "-c",
+    #     type=str,
+    #     default="camera_calibration_data.pkl",
+    #     help="Camera calibration",
+    # )
+    # parser.add_argument("--use_calib", "-u", action="store_true")
+    # args = parser.parse_args()
 
-    # Read frames from webcam
-    if args.cam_port.isdigit():
-        cap = VideoCapture(
-            port=int(args.cam_port),
-            width=args.cap_width,
-            height=args.cap_height,
-            fps=args.cap_fps,
-            calib=args.cam_calib,
-        ).start()
+    # # Read frames from webcam
+    # if args.cam_port.isdigit():
+    #     cap = VideoCapture(
+    #         port=int(args.cam_port),
+    #         width=args.cap_width,
+    #         height=args.cap_height,
+    #         fps=args.cap_fps,
+    #         calib=args.cam_calib,
+    #     ).start()
+    # else:
+    #     cap = cv2.VideoCapture(args.cam_port)
+    pipeline = rs.pipeline()
+    config = rs.config()
+
+    # get device product line for setting a supporting resolution
+    pipeline_wrapper = rs.pipeline_wrapper(pipeline)
+    pipeline_profile = config.resolve(pipeline_wrapper)
+    device = pipeline_profile.get_device()
+    device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+    # Check if the camera has RGB color channels set up
+    found_rgb = False
+    for s in device.sensors:
+        if s.get_info(rs.camera_info.name) == 'RGB Camera':
+            found_rgb = True
+            break
+    if not found_rgb:
+        print("The demo requires Depth camera with Color sensor")
+        exit(1)
+
+    # enable depth image streaming
+    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 15)
+
+    # enable color image streaming
+    if device_product_line == 'L500':
+        config.enable_stream(rs.stream.color, 960, 540, rs.format.bgr8, 15)
     else:
-        cap = cv2.VideoCapture(args.cam_port)
+        config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 15)
+
+    device.sensors[1].set_option(rs.option.white_balance, 3600) # 2800-6500/10 [4600]
+    device.sensors[1].set_option(rs.option.saturation, 66) # 0-100/1 [64]
+    device.sensors[1].set_option(rs.option.hue, 25) # -180-180/1 [0]
+    device.sensors[1].set_option(rs.option.exposure, 600) # 1-10000/1 [166]
+    print(device.sensors[1].get_option(rs.option.exposure))
+    print(device.sensors[1].get_option_range(rs.option.exposure))
+
+    # start streaming
+    pipeline.start(config)
+
+
 
     # Create calibration window
     cv2.namedWindow(window_detection_name)
@@ -162,13 +204,8 @@ if __name__ == "__main__":
 
         while True:
             # Read frame (skip a few frames so we can seek the video faster)
-            for _ in range(1):
-                cap.grab()
-
-            ret, frame = cap.read_calib() if args.use_calib else cap.read()
-            if not ret:
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                continue
+            frames = pipeline.wait_for_frames()
+            frame = np.asanyarray(frames.get_color_frame().get_data())
 
             if frame is None:
                 break
