@@ -6,11 +6,11 @@ import pyrealsense2 as rs
 
 from video_capture_threading import VideoCaptureThreading as VideoCapture
 
-# KEYS = ["blue", "blue_liberal", "stopcock_blue"]
-# FILE = "valve/valve_hsv.pkl"
+KEYS = ["blue", "blue_liberal", "stopcock_blue"]
+FILE = "valve/valve_hsv.pkl"
 
-KEYS = ["breaker_switch"]
-FILE = "breaker/breaker_hsv.pkl"
+# KEYS = ["breaker_switch"]
+# FILE = "breaker/breaker_hsv.pkl"
 
 max_value = 255
 max_value_H = 360 // 2
@@ -144,7 +144,7 @@ if __name__ == "__main__":
     device.sensors[1].set_option(rs.option.white_balance, 3600) # 2800-6500/10 [4600]
     device.sensors[1].set_option(rs.option.saturation, 66) # 0-100/1 [64]
     device.sensors[1].set_option(rs.option.hue, 25) # -180-180/1 [0]
-    device.sensors[1].set_option(rs.option.exposure, 600) # 1-10000/1 [166]
+    device.sensors[1].set_option(rs.option.exposure, 200) # 1-10000/1 [166]
     print(device.sensors[1].get_option(rs.option.exposure))
     print(device.sensors[1].get_option_range(rs.option.exposure))
 
