@@ -6,11 +6,10 @@ import pyrealsense2 as rs
 
 from video_capture_threading import VideoCaptureThreading as VideoCapture
 
-# KEYS = ["blue", "blue_liberal", "stopcock_blue"]
-# FILE = "valve/valve_hsv.pkl"
-
-KEYS = ["breaker_switch"]
-FILE = "breaker/breaker_hsv.pkl"
+KEYS = ["blue", "blue_liberal", "stopcock_blue"]
+FILE = "valve/valve_hsv.pkl"
+# KEYS = ["breaker_switch"]
+# FILE = "breaker/breaker_hsv.pkl"
 
 max_value = 255
 max_value_H = 360 // 2
